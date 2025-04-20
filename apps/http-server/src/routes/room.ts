@@ -4,7 +4,7 @@ import { createRoomSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 const roomRouter: Router = Router();
 roomRouter.use(authMiddleware);
-roomRouter.get("/", async (req, res) => {
+roomRouter.post("/", async (req, res) => {
   const data = createRoomSchema.safeParse(req.body);
   if (!data.success) {
     res.json({
@@ -13,14 +13,20 @@ roomRouter.get("/", async (req, res) => {
     return;
   }
   const userId = req.userId;
-  await prismaClient.room.create({
-    data: {
-      slug: data.data.name,
-      adminId: userId as string,
-    },
-  });
-  res.json({
-    roomId: "1213123",
-  });
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug: data.data.name,
+        adminId: userId as string,
+      },
+    });
+    res.json({
+      roomId: room.id,
+    });
+  } catch (error) {
+    res.json({
+      message: "Room already exists.",
+    });
+  }
 });
 export default roomRouter;
