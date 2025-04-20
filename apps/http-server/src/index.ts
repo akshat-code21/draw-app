@@ -11,6 +11,6 @@ app.get("/", (req, res) => {
 });
 app.use("/api/auth", authRouter);
 app.use("/api/create-room", roomRouter);
-app.listen(3001, () => {
+app.listen(PORT, () => {
   console.log("server up on port 3000");
 });

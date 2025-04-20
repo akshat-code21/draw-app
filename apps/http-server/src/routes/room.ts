@@ -1,9 +1,10 @@
 import { Router } from "express";
 import authMiddleware from "../middlewares";
 import { createRoomSchema } from "@repo/common/types";
+import { prismaClient } from "@repo/db/client";
 const roomRouter: Router = Router();
 roomRouter.use(authMiddleware);
-roomRouter.get("/", (req, res) => {
+roomRouter.get("/", async (req, res) => {
   const data = createRoomSchema.safeParse(req.body);
   if (!data.success) {
     res.json({
@@ -11,6 +12,13 @@ roomRouter.get("/", (req, res) => {
     });
     return;
   }
+  const userId = req.userId;
+  await prismaClient.room.create({
+    data: {
+      slug: data.data.name,
+      adminId: userId as string,
+    },
+  });
   res.json({
     roomId: "1213123",
   });
