@@ -1,7 +1,7 @@
 import { prismaClient } from "@repo/db/client";
 import { Router } from "express";
 const chatRouter: Router = Router();
-chatRouter.get("/chat/:roomId", async (req, res) => {
+chatRouter.get("/:roomId", async (req, res) => {
   const roomId = parseInt(req.params.roomId);
   const messages = await prismaClient.chat.findMany({
     where: {
@@ -13,7 +13,7 @@ chatRouter.get("/chat/:roomId", async (req, res) => {
     take: 50,
   });
   res.json({
-    messags: messages,
+    messages: messages,
   });
 });
 export default chatRouter;
