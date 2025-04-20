@@ -8,7 +8,7 @@ chatRouter.get("/:roomId", async (req, res) => {
       roomId,
     },
     orderBy: {
-      id: "desc",
+      id: "asc",
     },
     take: 50,
   });
