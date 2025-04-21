@@ -28,8 +28,8 @@ export default async function initDraw(
   socket.onmessage = (event) => {
     const message = JSON.parse(event.data);
     if (message.type === "chat") {
-      const parsedShape = JSON.parse(message);
-      existingShapes.push(parsedShape);
+      const parsedShape = JSON.parse(message.message);
+      existingShapes.push(parsedShape.shape);
       clearCanvas(existingShapes, canvas, ctx);
     }
   };
@@ -100,7 +100,7 @@ async function getExistingShapes(roomId: string) {
   const messages = res.data.messages;
   const shapes = messages.map((x: { message: string }) => {
     const messageData = JSON.parse(x.message);
-    return messageData;
+    return messageData.shape;
   });
   return shapes;
 }
