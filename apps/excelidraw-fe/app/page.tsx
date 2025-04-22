@@ -1,7 +1,9 @@
 "use client"
 import { motion } from 'framer-motion';
 import { Pencil, Users, Share2, Sparkles, ChevronRight, Github } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <nav className="fixed w-full bg-gray-900/80 backdrop-blur-sm z-50 border-b border-gray-800">
@@ -48,13 +50,17 @@ export default function Home() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="cursor-pointer bg-blue-500 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-600 transition-colors flex items-center"
+                onClick={()=>{
+                  router.push('/signup')
+                }}
               >
                 Start Drawing <ChevronRight className="ml-2 w-5 h-5" />
               </motion.button>
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                href="https://github.com"
+                href="https://github.com/akshat-code21/draw-app.git"
+                target='_blank'
                 className="bg-gray-800 text-gray-300 px-8 py-3 rounded-lg text-lg font-medium hover:bg-gray-700 transition-colors flex items-center"
               >
                 <Github className="mr-2 w-5 h-5" /> GitHub
