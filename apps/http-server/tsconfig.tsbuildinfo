@@ -1,1 +1,1 @@
-{"root":["./@types/index.d.ts","./src/index.ts","./src/middlewares/index.ts","./src/routes/auth.ts","./src/routes/chat.ts","./src/routes/room.ts"],"version":"5.8.3"}
+{"root":["./@types/index.d.ts","./src/index.ts","./src/config/swagger.ts","./src/middlewares/index.ts","./src/routes/auth.ts","./src/routes/chat.ts","./src/routes/room.ts"],"version":"5.8.3"}

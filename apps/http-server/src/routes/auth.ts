@@ -6,6 +6,37 @@ import { prismaClient } from "@repo/db/client";
 import bcrypt from "bcrypt";
 const saltRounds = 10;
 const authRouter: Router = Router();
+/**
+ * @swagger
+ * /api/auth/signup:
+ *   post:
+ *     summary: Create a new user
+ *     description: Creates a new user with the provided username and password  
+ *     responses:
+ *       200:
+ *         description: User created successfully
+ *       400:
+ *         description: Invalid inputs
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *             required:
+ *               - username
+ *               - password
+ *               - name
+ *     security:
+ *       - bearerAuth: []
+ */
 authRouter.post("/signup", async (req, res) => {
   const data = createUserSchema.safeParse(req.body);
   if (!data.success) {
@@ -26,6 +57,32 @@ authRouter.post("/signup", async (req, res) => {
     message: "user created",
   });
 });
+/**
+ * @swagger
+ * /api/auth/signin:
+ *   post:
+ *     summary: Sign in a user
+ *     description: Signs in a user with the provided username and password
+ *     responses:
+ *       200:
+ *         description: User signed in successfully
+ *       400:
+ *         description: Invalid inputs
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             required:
+ *               - username
+ *               - password
+ */
 authRouter.post("/signin", async (req, res) => {
   const data = signinSchema.safeParse(req.body);
   if (!data.success) {
