@@ -5,23 +5,20 @@ import { prismaClient } from "@repo/db/client";
 const wss = new WebSocketServer({ port: 8080 });
 interface User {
   ws: WebSocket;
-  rooms: string[];
+  rooms: number[];
   userId: string;
 }
 const users: User[] = [];
 const checkUser = async (token: string): Promise<string | null> => {
   try {
-    // First try to verify as JWT (for backward compatibility)
     try {
       const decoded = jwt.verify(token, JWT_SECRET as string);
       if (decoded && (decoded as JwtPayload).userId) {
         return (decoded as JwtPayload).userId;
       }
     } catch (jwtError) {
-      // If JWT verification fails, try Better Auth session token
     }
 
-    // Try Better Auth session token
     const session = await prismaClient.session.findUnique({
       where: {
         token: token,
@@ -35,7 +32,6 @@ const checkUser = async (token: string): Promise<string | null> => {
       return null;
     }
 
-    // Check if session is expired
     if (session.expiresAt < new Date()) {
       return null;
     }
@@ -64,62 +60,87 @@ wss.on("connection", async (ws, req) => {
     ws,
   });
   ws.on("message", async (data: string) => {
-    const parsedData = JSON.parse(data as string);
-    if (parsedData.type === "join_room") {
-      const user = users.find((x) => x.ws === ws);
-      user?.rooms.push(parsedData.roomId);
-    }
-    if (parsedData.type === "leave_room") {
-      const user = users.find((x) => x.ws === ws);
-      if (!user) {
-        ws.close();
-        return;
-      }
-      user.rooms = user?.rooms.filter((x) => x === parsedData.room);
-    }
-    if (parsedData.type === "chat") {
-      const roomId = parsedData.roomId;
-      const message = parsedData.message;
-
-      try {
-        await prismaClient.chat.create({
-          data: {
+    try {
+      const parsedData = JSON.parse(data as string);
+      
+      if (parsedData.type === "delete_all_shapes") {
+        const roomId = parsedData.roomId;
+        await prismaClient.chat.deleteMany({
+          where: {
             roomId,
-            message,
-            userId,
           },
         });
-
+        
         users.forEach((user) => {
-          if (user.rooms.includes(roomId)) {
+          if (user.rooms.includes(roomId) && user.ws !== ws) {
             user.ws.send(
               JSON.stringify({
-                type: "chat",
-                message: message,
+                type: "delete_all_shapes",
                 roomId,
               })
             );
           }
         });
-      } catch (error) {
-        console.error("Failed to create chat message:", error);
-        // Send error back to client
-        ws.send(JSON.stringify({
-          type: "error",
-          message: "Failed to save message to database"
-        }));
       }
+      
+      if (parsedData.type === "join_room") {
+        const user = users.find((x) => x.ws === ws);
+        if (user) {
+          user.rooms.push(parsedData.roomId);
+        }
+      }
+      
+      if (parsedData.type === "leave_room") {
+        const user = users.find((x) => x.ws === ws);
+        if (!user) {
+          ws.close();
+          return;
+        }
+        user.rooms = user?.rooms.filter((x) => x === parsedData.room);
+      }
+      
+      if (parsedData.type === "chat") {
+        const roomId = parsedData.roomId;
+        const message = parsedData.message;
+
+        try {
+          await prismaClient.chat.create({
+            data: {
+              roomId,
+              message,
+              userId,
+            },
+          });
+
+          users.forEach((user) => {
+            if (user.rooms.includes(roomId) && user.ws !== ws) {
+              user.ws.send(
+                JSON.stringify({
+                  type: "chat",
+                  message: message,
+                  roomId,
+                })
+              );
+            }
+          });
+        } catch (error) {
+          console.error("Failed to create chat message:", error);
+          ws.send(JSON.stringify({
+            type: "error",
+            message: "Failed to save message to database"
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing WebSocket message:", error);
+      console.error("Raw data:", data);
     }
   });
-  ws.on("message", async (data: string) => {
-    const parsedData = JSON.parse(data as string);
-    if (parsedData.type === "delete_all_shapes") {
-      const roomId = parsedData.roomId;
-      await prismaClient.chat.deleteMany({
-        where: {
-          roomId,
-        },
-      });
+
+  ws.on("close", () => {
+    const userIndex = users.findIndex((user) => user.ws === ws);
+    if (userIndex !== -1) {
+      users.splice(userIndex, 1);
     }
-  })
+  });
 });

@@ -45,6 +45,12 @@ export class Game {
     this.init();
     this.initHandlers();
     this.initMouseHandlers();
+    setTimeout(() => {
+      this.socket.send(JSON.stringify({
+        type: "join_room",
+        roomId: Number(this.roomId)
+      }));
+    }, 500);
   }
   destroy() {
     this.canvas.removeEventListener("mousedown", this.mouseDownHandler);
@@ -79,18 +85,24 @@ export class Game {
         const parsedShape = JSON.parse(message.message);
         this.existingShapes.push(parsedShape.shape);
         this.clearCanvas();
+      } else if (message.type === "delete_all_shapes") {
+        this.deleteAllShapes();
       }
     };
   }
   mouseDownHandler = (e: MouseEvent) => {
     this.clicked = true;
-    this.startX = e.clientX;
-    this.startY = e.clientY;
+    const rect = this.canvas.getBoundingClientRect();
+    this.startX = e.clientX - rect.left;
+    this.startY = e.clientY - rect.top;
   };
   mouseUpHandler = (e: MouseEvent) => {
     this.clicked = false;
-    const width = e.clientX - this.startX;
-    const height = e.clientY - this.startY;
+    const rect = this.canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    const width = currentX - this.startX;
+    const height = currentY - this.startY;
 
     const selectedShape = this.selectedShape;
     let shape: Shape | null = null;
@@ -115,8 +127,8 @@ export class Game {
         type: "line",
         startX: this.startX,
         startY: this.startY,
-        endX: e.clientX,
-        endY: e.clientY,
+        endX: currentX,
+        endY: currentY,
       };
     }
 
@@ -138,8 +150,11 @@ export class Game {
   };
   mouseMoveHandler = (e: MouseEvent) => {
     if (this.clicked) {
-      const width = e.clientX - this.startX;
-      const height = e.clientY - this.startY;
+      const rect = this.canvas.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+      const width = currentX - this.startX;
+      const height = currentY - this.startY;
       this.clearCanvas();
       this.ctx.strokeStyle = "rgba(0, 255, 0)";
       const selectedShape = this.selectedShape;
@@ -156,7 +171,7 @@ export class Game {
       } else if (selectedShape === "line") {
         this.ctx.beginPath();
         this.ctx.moveTo(this.startX, this.startY);
-        this.ctx.lineTo(e.clientX, e.clientY);
+        this.ctx.lineTo(currentX, currentY);
         this.ctx.stroke();
       }
     }

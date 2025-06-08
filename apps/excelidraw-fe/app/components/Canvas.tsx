@@ -2,7 +2,6 @@
 import { Game } from "@/draw/Game";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils";
-import { LogOutIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type ShapeTypes = "rect" | "line" | "circle"
