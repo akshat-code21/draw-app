@@ -3,7 +3,7 @@ import authMiddleware from "../middlewares";
 import { createRoomSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 const roomRouter: Router = Router();
-// roomRouter.use(authMiddleware);
+roomRouter.use(authMiddleware);
 /**
  * @swagger
  * /api/room/create-room:
@@ -31,6 +31,7 @@ const roomRouter: Router = Router();
   */
 roomRouter.post("/create-room", async (req, res) => {
   const data = createRoomSchema.safeParse(req.body);
+  console.log(data);
   if (!data.success) {
     res.json({
       message: "Incorrect inputs",
@@ -49,11 +50,51 @@ roomRouter.post("/create-room", async (req, res) => {
       roomId: room.id,
     });
   } catch (error) {
+    console.log(error);
     res.json({
-      message: "Room already exists.",
+      message: error,
     });
   }
 });
+
+/**
+ * @swagger
+ * /api/room/get-rooms:
+ *   get:
+ *     summary: Get all rooms
+ *     description: Retrieves all rooms
+ *     responses:
+ *       200:
+ *         description: Rooms retrieved successfully
+ *       400:
+ *         description: Invalid inputs
+ *     security:
+ *       - bearerAuth: []
+ */
+roomRouter.get("/get-rooms", async (req, res) => {
+  try {
+    const userId = req.userId;
+    const rooms = await prismaClient.room.findMany({
+      where: {
+        adminId: userId as string,
+      },
+    });
+    if (!rooms) {
+      res.json({
+        message: "No rooms found",
+      });
+      return;
+    }
+    res.json({
+      rooms,
+    });
+  } catch (error) {
+    res.json({
+      message: "Error fetching rooms",
+    });
+  }
+});
+
 /**
  * @swagger
  * /api/room/{slug}:
@@ -85,4 +126,5 @@ roomRouter.get("/:slug", async (req, res) => {
     roomId: room?.id,
   });
 });
+
 export default roomRouter;

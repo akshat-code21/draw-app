@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@repo/db": "workspace:*",
+    "@repo/backend-common": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^20",

@@ -2,26 +2,26 @@ import { getExistingShapes } from "./http";
 type ShapeType = "rect" | "circle" | "line" | null;
 type Shape =
   | {
-      type: "rect";
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    }
+    type: "rect";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
   | {
-      type: "circle";
-      centerX: number;
-      centerY: number;
-      radius: number;
-    }
+    type: "circle";
+    centerX: number;
+    centerY: number;
+    radius: number;
+  }
   | {
-      type: "line";
-      endX: number;
-      endY: number;
-      startX: number;
-      startY: number;
-    }
-  | null; 
+    type: "line";
+    endX: number;
+    endY: number;
+    startX: number;
+    startY: number;
+  }
+  | null;
 export class Game {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -64,8 +64,13 @@ export class Game {
     this.selectedShape = shape;
   }
   async init() {
-    this.existingShapes = await getExistingShapes(this.roomId);
-    this.clearCanvas();
+    const shapes = await getExistingShapes(this.roomId);
+    if (shapes) {
+      this.existingShapes = shapes;
+      this.clearCanvas();
+    } else {
+      this.clearCanvas();
+    }
   }
   initHandlers() {
     this.socket.onmessage = (event) => {
@@ -184,5 +189,9 @@ export class Game {
         this.ctx.closePath();
       }
     });
+  }
+  deleteAllShapes() {
+    this.existingShapes = [];
+    this.clearCanvas();
   }
 }
