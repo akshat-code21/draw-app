@@ -106,7 +106,7 @@ authRouter.post("/signin", async (req, res) => {
     console.log("no jwt secret");
     return;
   }
-  const compare = await bcrypt.compare(data.data.password, user.password);
+  const compare = await bcrypt.compare(data.data.password, user.password as string);
   if (!compare) {
     res.json({
       message: "Invalid creds",

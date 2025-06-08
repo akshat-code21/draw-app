@@ -54,24 +54,35 @@ wss.on("connection", (ws, req) => {
     if (parsedData.type === "chat") {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
-      await prismaClient.chat.create({
-        data: {
-          roomId,
-          message,
-          userId,
-        },
-      });
-      users.forEach((user) => {
-        if (user.rooms.includes(roomId)) {
-          user.ws.send(
-            JSON.stringify({
-              type: "chat",
-              message: message,
-              roomId,
-            })
-          );
-        }
-      });
+      
+      try {
+        await prismaClient.chat.create({
+          data: {
+            roomId,
+            message,
+            userId,
+          },
+        });
+        
+        users.forEach((user) => {
+          if (user.rooms.includes(roomId)) {
+            user.ws.send(
+              JSON.stringify({
+                type: "chat",
+                message: message,
+                roomId,
+              })
+            );
+          }
+        });
+      } catch (error) {
+        console.error("Failed to create chat message:", error);
+        // Send error back to client
+        ws.send(JSON.stringify({
+          type: "error",
+          message: "Failed to save message to database"
+        }));
+      }
     }
   });
 });
