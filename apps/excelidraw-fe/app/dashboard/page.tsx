@@ -32,7 +32,7 @@ export default async function Dashboard() {
                     <ul>
                         {rooms.map((room: any) => (
                             <li key={room.id}>
-                                <a href={`/canvas/${room.id}`}>{room.slug}</a>
+                                <a href={`/canvas/${room.id}`}>{room.slug} {room.id}</a>
                             </li>
                         ))}
                     </ul>

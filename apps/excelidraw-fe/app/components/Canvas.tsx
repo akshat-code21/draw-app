@@ -3,7 +3,8 @@ import { Game } from "@/draw/Game";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils";
 import { Button } from "@/components/ui/button";
-
+import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 type ShapeTypes = "rect" | "line" | "circle"
 
 export default function Canvas({ roomId, socket }: {
@@ -14,7 +15,9 @@ export default function Canvas({ roomId, socket }: {
     const [game, setGame] = useState<Game>();
     const [shape, setShape] = useState<ShapeTypes>("rect");
     const [isModalOpen, setIsModalOpen] = useState(false);
-
+    const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+    const [toolBarOpen, setToolBarOpen] = useState(false);
+    const router = useRouter();
     useEffect(() => {
         game?.setShape(shape)
     }, [shape, game])
@@ -38,10 +41,12 @@ export default function Canvas({ roomId, socket }: {
     const handleDeleteAllShapes = () => {
         setIsModalOpen(false);
         game?.deleteAllShapes();
-        socket.send(JSON.stringify({
-            type: "delete_all_shapes",
-            roomId: Number(roomId)
-        }));
+    }
+
+    const handleExitRoom = () => {
+        setIsExitModalOpen(false);
+        game?.exitRoom();
+        router.push("/dashboard");
     }
 
     return (
@@ -55,6 +60,9 @@ export default function Canvas({ roomId, socket }: {
                         <h1 className="text-white font-semibold text-lg">ExceliDraw</h1>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <Button variant={"destructive"} onClick={() => setIsExitModalOpen(true)}>
+                            Exit Room
+                        </Button>
                         <Button variant={"destructive"} onClick={() => setIsModalOpen(true)}>
                             Delete All Shapes
                         </Button>
@@ -77,31 +85,36 @@ export default function Canvas({ roomId, socket }: {
                 }}
             />
 
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 z-10">
+            <div className={cn("absolute left-6 top-1/2 -translate-y-1/2 z-10", toolBarOpen ? "w-20" : "w-20")}>
                 <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 p-2">
                     <div className="flex flex-col gap-2">
-                        {tools.map((tool) => (
-                            <button
-                                key={tool.type}
-                                onClick={() => setShape(tool.type)}
-                                className={cn(
-                                    "flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-all duration-200 group relative",
-                                    "hover:scale-105 hover:shadow-lg",
-                                    shape === tool.type
-                                        ? "bg-blue-500 text-white shadow-lg scale-105"
-                                        : "bg-gray-50 hover:bg-gray-100 text-gray-700"
-                                )}
-                                title={tool.label}
-                            >
-                                <span className="text-xl mb-1">{tool.icon}</span>
-                                <span className="text-xs font-medium">{tool.label}</span>
+                        <Button variant={"outline"} onClick={() => setToolBarOpen(!toolBarOpen)} className="w-16 h-10">
+                            {toolBarOpen ? <ChevronUp strokeWidth={3} className="stroke-black w-6 h-6" /> : <ChevronDown strokeWidth={3} className="stroke-black w-6 h-6" />}
+                        </Button>
+                        {toolBarOpen && (
+                            tools.map((tool) => (
+                                <button
+                                    key={tool.type}
+                                    onClick={() => setShape(tool.type)}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center w-16 h-16 rounded-lg transition-all duration-200 group relative",
+                                        "hover:scale-105 hover:shadow-lg",
+                                        shape === tool.type
+                                            ? "bg-blue-500 text-white shadow-lg scale-105"
+                                            : "bg-gray-50 hover:bg-gray-100 text-gray-700"
+                                    )}
+                                    title={tool.label}
+                                >
+                                    <span className="text-xl mb-1">{tool.icon}</span>
+                                    <span className="text-xs font-medium">{tool.label}</span>
 
-                                {/* Tooltip */}
-                                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                    {tool.label}
-                                </div>
-                            </button>
-                        ))}
+                                    {/* Tooltip */}
+                                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                        {tool.label}
+                                    </div>
+                                </button>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -152,6 +165,21 @@ export default function Canvas({ roomId, socket }: {
                             <div className="flex justify-end gap-2">
                                 <Button variant={"outline"} onClick={() => setIsModalOpen(false)}>Cancel</Button>
                                 <Button variant={"destructive"} onClick={handleDeleteAllShapes}>Delete</Button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                isExitModalOpen && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
+                        <div className="text-primary bg-white p-8 rounded-lg shadow-lg">
+                            <h2 className="text-2xl font-bold mb-4">Exit Room</h2>
+                            <p className="mb-4">Are you sure you want to exit the room?</p>
+                            <div className="flex justify-end gap-2">
+                                <Button variant={"outline"} onClick={() => setIsExitModalOpen(false)}>Cancel</Button>
+                                <Button variant={"destructive"} onClick={handleExitRoom}>Exit</Button>
                             </div>
                         </div>
                     </div>

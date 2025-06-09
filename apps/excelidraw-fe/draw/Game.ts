@@ -206,7 +206,17 @@ export class Game {
     });
   }
   deleteAllShapes() {
+    this.socket.send(JSON.stringify({
+      type: "delete_all_shapes",
+      roomId: Number(this.roomId)
+    }));
     this.existingShapes = [];
     this.clearCanvas();
+  }
+  exitRoom() {
+    this.socket.send(JSON.stringify({
+      type: "leave_room",
+      roomId: Number(this.roomId)
+    }));
   }
 }

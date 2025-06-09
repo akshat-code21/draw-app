@@ -17,6 +17,7 @@ const checkUser = async (token: string): Promise<string | null> => {
         return (decoded as JwtPayload).userId;
       }
     } catch (jwtError) {
+      console.error("JWT verification error:", jwtError);
     }
 
     const session = await prismaClient.session.findUnique({
